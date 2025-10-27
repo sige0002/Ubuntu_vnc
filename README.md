@@ -6,7 +6,7 @@ CUDA対応のVNC環境をDocker Composeで簡単に起動できるようにし�
 
 ### 起動
 ```bash
-cd Ubbuntu_vnc
+cd Ubuntu_vnc
 ./start.sh
 ```
 
