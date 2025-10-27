@@ -29,7 +29,7 @@ cd Ubuntu_vnc
 
 ### 2. VNCアクセス
 ブラウザで以下にアクセス：
-- URL: http://localhost:6080
+- URL: http://localhost:6080/vnc.html
 - パスワード: 1234
 
 ### 3. 環境停止
