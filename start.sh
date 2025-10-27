@@ -4,6 +4,20 @@
 
 echo "🚀 VGGT CUDA VNC環境を起動しています..."
 
+# ホストGPU環境の事前チェック
+if ! command -v nvidia-smi >/dev/null 2>&1; then
+    echo "⚠️ ホスト側で nvidia-smi が見つかりません。GPUドライバが正しく導入されているか確認してください。"
+fi
+
+if ! docker info --format '{{json .Runtimes}}' 2>/dev/null | grep -q '"nvidia"'; then
+    echo "❌ DockerがNVIDIA Container Runtimeを認識していません。"
+    echo "   以下の手順で nvidia-container-toolkit を導入し、Dockerを再起動してください。"
+    echo "     1. https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html を参照"
+    echo "     2. インストール後、/etc/docker/daemon.json に runtime 設定を追加（例：\"default-runtime\": \"nvidia\"）"
+    echo "     3. sudo systemctl restart docker（WSL環境では sudo service docker restart）"
+    exit 1
+fi
+
 # 既存のコンテナがあれば停止・削除
 if [ "$(docker ps -aq -f name=cuda-vnc)" ]; then
     echo "📦 既存のcuda-vncコンテナを停止・削除しています..."

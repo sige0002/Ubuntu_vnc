@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.6.0-cudnn-runtime-ubuntu22.04
 
 # 非対話的インストールとタイムゾーン設定
 ENV DEBIAN_FRONTEND=noninteractive
@@ -16,6 +16,10 @@ RUN apt-get update && apt-get install -y \
     xclip xsel \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# PyTorch (CUDA 12.x対応ビルド) をインストール
+RUN python3 -m pip install --upgrade pip \
+ && python3 -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 # VNC設定
 RUN mkdir -p /root/.vnc

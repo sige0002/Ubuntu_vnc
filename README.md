@@ -3,6 +3,34 @@
 CUDA対応のVNC環境をDocker Composeで簡単に起動できるようにしたセットアップです。
 
 ## 🚀 クイックスタート
+### 前提条件
+- DockerおよびDocker Composeがインストールされていること
+- xserverがインストールされていること
+- NVIDIA GPU搭載マシンで、NVIDIAドライバとnvidia-container-toolkit(インストールのパッケージは調べておく)がインストールされていること
+# 1. パッケージ更新
+sudo apt update
+
+# 2. 必要ツールをインストール
+sudo apt install -y ca-certificates curl gnupg lsb-release
+
+# 3. Docker公式のGPGキー登録
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# 4. Docker公式リポジトリ追加
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 5. Docker Engine インストール
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 6. 権限設定（sudo不要でdocker使う）
+sudo usermod -aG docker $USER
+
 
 ### 起動
 ```bash
@@ -83,12 +111,64 @@ VGGT/
 
 ## 🔧 設定詳細
 
+### 前提条件
+- NVIDIAドライバ 560.94 以降（ホストOS側）
+- NVIDIA Container Toolkit（`nvidia-container-runtime` が Docker から利用可能であること）
+- Docker 20.10 以降
+
+WSL2環境の場合は、WSLディストリビューション内にも`nvidia-container-toolkit`を導入し、`/etc/docker/daemon.json`に以下のような設定を追加してください。
+```json
+{
+  "default-runtime": "nvidia",
+  "runtimes": {
+    "nvidia": {
+      "path": "nvidia-container-runtime",
+      "runtimeArgs": []
+    }
+  }
+}
+```
+設定変更後は `sudo systemctl restart docker`（WSLでは`sudo service docker restart`）でDockerデーモンを再起動します。
+
 ### ポート
 - 6080: noVNC（ブラウザVNC）
 
 ### GPU
 - すべてのGPUが利用可能
-- CUDA 12.1.1 + cuDNN 8
+- CUDA 12.6 (ベースイメージ) + cuDNN 8
+
+### GPU 動作確認
+コンテナ起動後に以下を実行して、ホストの GPU が認識されているか確認できます。
+```bash
+docker exec -it cuda-vnc bash -lc "nvidia-smi"
+```
+想定される出力例：
+```
+Mon Oct 27 21:58:14 2025
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 560.35.02              Driver Version: 560.94         CUDA Version: 12.6     |
+|-----------------------------------------+------------------------+----------------------|
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3070        On  |   00000000:01:00.0  On |                  N/A |
+|  0%   45C    P8              9W /  220W |    1294MiB /   8192MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                          
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A        22      G   /Xwayland                                   N/A      |
++-----------------------------------------------------------------------------------------+
+```
+PyTorchが CUDA を正しく認識しているかは次のコマンドでも確認できます。
+```bash
+docker exec -it cuda-vnc bash -lc "python3 - <<'PY'\nimport torch\nprint('torch version:', torch.__version__)\nprint('cuda available:', torch.cuda.is_available())\nprint('current device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'N/A')\nPY"
+```
 
 ### 環境
 - Ubuntu 22.04
