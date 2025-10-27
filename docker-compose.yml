@@ -1,0 +1,22 @@
+services:
+  cuda-vnc:
+    build: .
+    container_name: cuda-vnc
+    ports:
+      - "6080:6080"
+    environment:
+      - DISPLAY=:0
+      - TZ=Asia/Tokyo
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./workspace:/workspace
+    working_dir: /workspace
