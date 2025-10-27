@@ -6,7 +6,7 @@ CUDA対応のVNC環境をDocker Composeで簡単に起動できるようにし�
 
 ### 起動
 ```bash
-cd VGGT
+cd Ubbuntu_vnc
 ./start.sh
 ```
 
@@ -133,5 +133,3 @@ docker run -it --gpus all -p 6080:6080 --name cuda-vnc cuda-vnc
 # ワンコマンドで完了！
 ./start.sh
 ```
-
-これで面倒な手順が大幅に簡略化されました！
